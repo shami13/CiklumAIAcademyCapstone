@@ -1,0 +1,38 @@
+graph TB
+    subgraph Input
+        V[Video File]
+    end
+
+    subgraph Agent["LangChain ReAct Agent"]
+        VA[Video Analyzer<br/>GPT-4o Vision]
+        RAG[RAG Knowledge Base<br/>ChromaDB + Embeddings]
+        HR[Hashtag Researcher<br/>Trending Topics]
+        DG[Description Generator<br/>Combine Analysis + RAG]
+        SR[Self-Reflection<br/>Evaluate & Improve]
+        EV[Evaluator<br/>Quality Scoring]
+    end
+
+    subgraph Output
+        TP[TikTok Publisher<br/>Content Posting API]
+        RPT[Quality Report]
+    end
+
+    V --> VA
+    V --> HR
+    VA --> DG
+    RAG --> DG
+    HR --> DG
+    DG --> SR
+    SR -->|Score < 7/10| DG
+    SR -->|Score >= 7/10| TP
+    SR --> EV
+    EV --> RPT
+
+    style Agent fill:#f5f5ff,stroke:#534AB7
+    style VA fill:#E1F5EE,stroke:#0F6E56
+    style RAG fill:#E1F5EE,stroke:#0F6E56
+    style HR fill:#E1F5EE,stroke:#0F6E56
+    style DG fill:#FAECE7,stroke:#993C1D
+    style SR fill:#FBEAF0,stroke:#993556
+    style EV fill:#FBEAF0,stroke:#993556
+    style TP fill:#E6F1FB,stroke:#185FA5
