@@ -1,0 +1,30 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+
+# ChromaDB storage
+chroma_db/
+
+# Temp frames from video analysis
+temp_frames/
+
+# IDE & tools
+.idea/
+.vscode/
+.claude/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+/.idea
