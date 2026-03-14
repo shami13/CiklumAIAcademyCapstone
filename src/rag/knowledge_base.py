@@ -111,7 +111,7 @@ def _get_collection() -> chromadb.Collection:
         model_name=config.OPENAI_EMBEDDING_MODEL,
     )
 
-    client = chromadb.Client()  # In-memory for simplicity; use PersistentClient for prod
+    client = chromadb.PersistentClient(path=config.CHROMA_PERSIST_DIR)
     _collection = client.get_or_create_collection(
         name="tiktok_knowledge",
         embedding_function=embedding_fn,

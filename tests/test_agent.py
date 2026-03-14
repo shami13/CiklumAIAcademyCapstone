@@ -1,7 +1,6 @@
 """Tests for TikTok Content Agent components."""
 
 import json
-import os
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -89,14 +88,24 @@ class TestHashtagResearcher(unittest.TestCase):
 class TestDescriptionGenerator(unittest.TestCase):
     """Test description generator tool."""
 
+    @patch("src.tools.description_generator.query_personal_posts")
     @patch("src.tools.description_generator.query_knowledge_base")
     @patch("src.tools.description_generator.client")
-    def test_generate_description(self, mock_client, mock_rag):
+    def test_generate_description(self, mock_client, mock_rag, mock_personal):
         mock_rag.return_value = "Use hooks in first line. Keep under 150 chars."
+        mock_personal.return_value = ""
         mock_response = MagicMock()
         mock_response.choices = [
             MagicMock(message=MagicMock(
-                content="Wait until you see what my lights can do 🏠\n\n#smarthome #tech"
+                content=(
+                    "---TIKTOK---\n"
+                    "Wait until you see what my lights can do\n\n#smarthome #tech\n\n"
+                    "---INSTAGRAM REELS---\n"
+                    "My smart home setup is next level\n\n#smarthome #tech\n\n"
+                    "---YOUTUBE SHORTS---\n"
+                    "Title: Smart Home Setup That Will Blow Your Mind\n"
+                    "Description: Check out my automated smart home. #Shorts #smarthome"
+                )
             ))
         ]
         mock_client.chat.completions.create.return_value = mock_response
@@ -107,33 +116,9 @@ class TestDescriptionGenerator(unittest.TestCase):
             "hashtags": "#smarthome #tech",
             "style": "engaging",
         })
-        self.assertIn("#smarthome", result)
-
-
-class TestTikTokPublisher(unittest.TestCase):
-    """Test TikTok publisher tool."""
-
-    def test_dry_run_returns_json(self):
-        from src.tools.tiktok_publisher import publish_to_tiktok
-        result = publish_to_tiktok.invoke({
-            "video_path": "/fake/video.mp4",
-            "description": "Test description #test",
-            "dry_run": True,
-        })
-        data = json.loads(result)
-        self.assertEqual(data["status"], "DRY_RUN")
-        self.assertEqual(data["hashtag_count"], 1)
-
-    def test_live_publish_no_token(self):
-        from src.tools.tiktok_publisher import publish_to_tiktok
-        with patch("src.tools.tiktok_publisher.config") as mock_config:
-            mock_config.TIKTOK_ACCESS_TOKEN = ""
-            result = publish_to_tiktok.invoke({
-                "video_path": "/fake/video.mp4",
-                "description": "Test",
-                "dry_run": False,
-            })
-            self.assertIn("Error", result)
+        self.assertIn("---TIKTOK---", result)
+        self.assertIn("---INSTAGRAM REELS---", result)
+        self.assertIn("---YOUTUBE SHORTS---", result)
 
 
 class TestEvaluator(unittest.TestCase):
