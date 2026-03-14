@@ -22,5 +22,8 @@ class Config:
     MAX_FRAMES: int = int(os.getenv("MAX_FRAMES", "5"))
     FRAME_RESIZE_WIDTH: int = 512
 
+    # Instagram
+    INSTAGRAM_USERNAME: str = os.getenv("INSTAGRAM_USERNAME", "")
+
 
 config = Config()

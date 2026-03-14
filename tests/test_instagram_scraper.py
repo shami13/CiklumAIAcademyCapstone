@@ -10,7 +10,6 @@ def _make_mock_post(
     likes=100,
     comments=10,
     typename="GraphImage",
-    hashtags=None,
     date=None,
 ):
     """Create a mock instaloader.Post object."""
@@ -19,7 +18,6 @@ def _make_mock_post(
     post.likes = likes
     post.comments = comments
     post.typename = typename
-    post.hashtags = hashtags or set()
     post.date_utc = date or datetime(2026, 3, 1, 12, 0, 0)
     return post
 
@@ -104,7 +102,6 @@ class TestInstaloaderPostToDict(unittest.TestCase):
             likes=500,
             comments=25,
             typename="GraphImage",
-            hashtags={"travel", "nature"},
             date=datetime(2026, 3, 1, 12, 0, 0),
         )
         result = _instaloader_post_to_dict(post)
@@ -125,9 +122,9 @@ class TestInstaloaderPostToDict(unittest.TestCase):
         result = _instaloader_post_to_dict(post)
         self.assertEqual(result["caption"], "")
 
-    def test_empty_hashtags(self):
+    def test_no_hashtags_in_caption(self):
         from src.scrapers.instagram_scraper import _instaloader_post_to_dict
-        post = _make_mock_post(hashtags=set())
+        post = _make_mock_post(caption="No tags here")
         result = _instaloader_post_to_dict(post)
         self.assertEqual(result["hashtags"], [])
 

@@ -1,99 +1,84 @@
-"""RAG Knowledge Base — ChromaDB vector store with TikTok content best practices."""
+"""RAG Knowledge Base — ChromaDB vector store with video description best practices."""
 
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 
 from src.config import config
 
-# Best practices knowledge documents
+# Best practices for writing video descriptions across platforms
 KNOWLEDGE_DOCUMENTS = [
     {
-        "id": "hook_strategies",
+        "id": "tiktok_caption_format",
         "text": (
-            "TikTok Hook Strategies: The first 1-3 seconds determine if viewers keep watching. "
-            "Effective hooks include: asking a provocative question, making a bold claim, "
-            "showing the end result first, using pattern interrupts, starting mid-action. "
-            "The caption hook should mirror the video hook — if the video starts with a question, "
-            "the caption should too. Avoid generic hooks like 'Wait for it' — be specific."
+            "TikTok Caption Format: First 150 characters are visible before 'more' — put the hook there. "
+            "Structure: hook line → 1-2 sentences of context → call-to-action → hashtags on a new line. "
+            "Use line breaks for readability. 2-4 emojis boost engagement 15-25%. "
+            "Keep total length under 300 chars for best performance. Max 2200 chars. "
+            "5-7 hashtags: mix 1-2 broad (1M+ views) with 3-4 niche. "
+            "Avoid #fyp and #foryou — oversaturated and ineffective."
         ),
-        "metadata": {"category": "hooks", "platform": "tiktok"},
+        "metadata": {"category": "description_format", "platform": "tiktok"},
     },
     {
-        "id": "caption_structure",
+        "id": "reels_caption_format",
         "text": (
-            "TikTok Caption Structure: Optimal captions follow a pattern: Hook line (first 150 chars "
-            "visible before 'more'), context/value in 1-2 short sentences, call-to-action, then "
-            "hashtags on a new line. Use line breaks for readability. Emojis increase engagement by "
-            "15-25% when used sparingly (2-4 per caption). Keep total length under 300 chars for "
-            "best engagement — longer captions get lower completion rates."
+            "Instagram Reels Caption Format: First ~125 characters visible before 'more'. "
+            "Storytelling tone works better than TikTok's punchy style. "
+            "Structure: attention-grabbing opener → narrative/value → CTA (save, share, comment) → hashtags. "
+            "Emojis are expected and boost engagement. 5-10 hashtags at the end or in first comment. "
+            "Mix content-specific, community, and broad hashtags. Max 2200 chars. "
+            "Longer captions perform well on Reels if they tell a story."
         ),
-        "metadata": {"category": "captions", "platform": "tiktok"},
+        "metadata": {"category": "description_format", "platform": "instagram"},
     },
     {
-        "id": "hashtag_strategy",
+        "id": "shorts_caption_format",
         "text": (
-            "TikTok Hashtag Strategy: Use 3-5 hashtags for optimal reach. Mix: 1-2 broad hashtags "
-            "(1M+ views), 2-3 niche hashtags (100K-1M views), 1 branded or unique hashtag. "
-            "Avoid banned or shadowbanned hashtags. Place hashtags at the end of the caption, "
-            "not inline. Trending hashtags boost discovery but only if relevant to content. "
-            "Don't use #fyp or #foryou — they're oversaturated and don't help."
+            "YouTube Shorts Caption Format: Title is king — max 100 chars, must be SEO-friendly and catchy. "
+            "Description: 2-3 keyword-rich sentences for search discovery. "
+            "Max 3 hashtags — #Shorts is recommended plus 2 topic-relevant tags. "
+            "Include a CTA to subscribe or watch full-length content. "
+            "YouTube Shorts descriptions are indexed for search — treat them like mini-SEO. "
+            "Max 5000 chars for description but keep it concise."
         ),
-        "metadata": {"category": "hashtags", "platform": "tiktok"},
+        "metadata": {"category": "description_format", "platform": "youtube"},
     },
     {
-        "id": "cta_patterns",
+        "id": "hook_writing",
         "text": (
-            "TikTok Call-to-Action Patterns: Direct CTAs ('Follow for more') work but feel pushy. "
-            "Better patterns: question CTAs ('Which one would you pick?'), challenge CTAs "
-            "('Try this and tag me'), save CTAs ('Save this for later'), share CTAs "
-            "('Send this to someone who needs it'). Comments-focused CTAs drive the algorithm "
-            "hardest — the more comments, the more TikTok pushes the video."
+            "Writing Hooks for Video Descriptions: The caption hook should mirror the video hook. "
+            "Effective patterns: provocative question ('Did you know X can do Y?'), bold claim "
+            "('This changed everything'), result-first ('Here's what happened when...'), "
+            "curiosity gap ('The trick no one talks about'). "
+            "Avoid generic hooks like 'Wait for it' or 'Watch till the end'. Be specific to the content. "
+            "The hook must make sense without watching the video — it's what drives the click."
         ),
-        "metadata": {"category": "engagement", "platform": "tiktok"},
+        "metadata": {"category": "hooks", "platform": "all"},
     },
     {
-        "id": "posting_timing",
+        "id": "cta_in_descriptions",
         "text": (
-            "TikTok Posting Best Practices: Post when your audience is active — generally "
-            "7-9 AM, 12-2 PM, and 7-11 PM in target timezone. Consistency matters more than "
-            "timing — 3-5 posts per week minimum. First 30 minutes after posting are critical "
-            "for initial engagement signals. Respond to every comment in the first hour. "
-            "Cross-post to Instagram Reels and YouTube Shorts for extra reach."
+            "Call-to-Action in Video Descriptions: Question CTAs ('Which would you pick?') drive comments. "
+            "Save CTAs ('Save this for later') signal value to the algorithm. "
+            "Share CTAs ('Send this to someone who needs it') expand reach. "
+            "On TikTok, comments-focused CTAs drive the algorithm hardest. "
+            "On Reels, save-focused CTAs are weighted heavily. "
+            "On Shorts, subscribe CTAs work best ('Subscribe for more X'). "
+            "Match the CTA to the content — don't ask 'Which is your favorite?' on a tutorial."
         ),
-        "metadata": {"category": "timing", "platform": "tiktok"},
-    },
-    {
-        "id": "content_categories",
-        "text": (
-            "TikTok Content Categories That Perform Well: Educational content ('Did you know...'), "
-            "behind-the-scenes, transformation/before-after, tutorials, day-in-the-life, "
-            "trending sounds with original twist, reaction content, storytelling. "
-            "Tech content works best as quick tips, gadget reveals, or setup tours. "
-            "Smart home content performs well with 'oddly satisfying' automation demos."
-        ),
-        "metadata": {"category": "content_types", "platform": "tiktok"},
-    },
-    {
-        "id": "engagement_optimization",
-        "text": (
-            "TikTok Engagement Optimization: Videos with text overlays get 40% more engagement. "
-            "Captions should complement, not duplicate the video text. Use curiosity gaps — "
-            "hint at something in the caption that requires watching the full video. "
-            "Controversy and hot takes drive comments (but stay authentic). "
-            "Replying to comments with new videos boosts both old and new content."
-        ),
-        "metadata": {"category": "engagement", "platform": "tiktok"},
+        "metadata": {"category": "cta", "platform": "all"},
     },
     {
         "id": "description_mistakes",
         "text": (
-            "Common TikTok Caption Mistakes: Too many hashtags (10+) looks spammy. "
-            "No hook in first line — viewers scroll past. Generic CTAs that don't match content. "
-            "Not using line breaks — wall of text is unreadable. Copying other creators' captions "
-            "verbatim. Ignoring the caption entirely (empty captions lose 30% potential reach). "
-            "Using hashtags mid-sentence breaks reading flow."
+            "Common Video Description Mistakes: Too many hashtags (10+) looks spammy on TikTok. "
+            "No hook in first line — users scroll past. Generic CTAs that don't match the content. "
+            "No line breaks — wall of text is unreadable. Empty captions lose ~30% potential reach. "
+            "Using the same caption across all platforms — each has different audience expectations. "
+            "Hashtags mid-sentence break reading flow — always place at the end. "
+            "Duplicating video text overlay in the caption instead of complementing it."
         ),
-        "metadata": {"category": "mistakes", "platform": "tiktok"},
+        "metadata": {"category": "mistakes", "platform": "all"},
     },
 ]
 

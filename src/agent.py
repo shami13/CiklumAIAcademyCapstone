@@ -1,7 +1,7 @@
-"""Content Agent — LangChain ReAct agent with tools for video analysis and multi-platform description generation."""
+"""Content Agent — LangGraph ReAct agent with tools for video analysis and multi-platform description generation."""
 
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
 
 from src.config import config
 from src.evaluation.evaluator import evaluate_description
@@ -49,9 +49,8 @@ IMPORTANT:
 """
 
 
-def create_agent():
-    """Create and return the LangChain ReAct agent."""
-    # Seed RAG knowledge base
+def _build_agent():
+    """Create the LangGraph ReAct agent."""
     seed_knowledge_base()
 
     llm = ChatOpenAI(
@@ -60,10 +59,13 @@ def create_agent():
         temperature=0.7,
     )
 
-    # Bind tools to the LLM
-    llm_with_tools = llm.bind_tools(TOOLS)
+    agent = create_react_agent(
+        model=llm,
+        tools=TOOLS,
+        prompt=SYSTEM_PROMPT,
+    )
 
-    return llm_with_tools, TOOLS
+    return agent
 
 
 def run_agent(video_path: str) -> str:
@@ -75,31 +77,7 @@ def run_agent(video_path: str) -> str:
     Returns:
         Final descriptions for TikTok, Instagram Reels, and YouTube Shorts.
     """
-    from langchain.agents import AgentExecutor, create_tool_calling_agent
-    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-    seed_knowledge_base()
-
-    llm = ChatOpenAI(
-        model=config.OPENAI_MODEL,
-        api_key=config.OPENAI_API_KEY,
-        temperature=0.7,
-    )
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-
-    agent = create_tool_calling_agent(llm, TOOLS, prompt)
-    executor = AgentExecutor(
-        agent=agent,
-        tools=TOOLS,
-        verbose=True,
-        max_iterations=15,
-        handle_parsing_errors=True,
-    )
+    agent = _build_agent()
 
     user_input = (
         f"Process this video and create optimized descriptions for TikTok, "
@@ -109,41 +87,19 @@ def run_agent(video_path: str) -> str:
         f"for all 3 platforms → evaluate → reflect/improve → present final result."
     )
 
-    result = executor.invoke({"input": user_input})
-    return result["output"]
+    result = agent.invoke({"messages": [{"role": "user", "content": user_input}]})
+    return result["messages"][-1].content
 
 
 def run_interactive():
     """Run the agent in interactive chat mode."""
-    from langchain.agents import AgentExecutor, create_tool_calling_agent
-    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-    seed_knowledge_base()
-
-    llm = ChatOpenAI(
-        model=config.OPENAI_MODEL,
-        api_key=config.OPENAI_API_KEY,
-        temperature=0.7,
-    )
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-
-    agent = create_tool_calling_agent(llm, TOOLS, prompt)
-    executor = AgentExecutor(
-        agent=agent,
-        tools=TOOLS,
-        verbose=True,
-        max_iterations=15,
-        handle_parsing_errors=True,
-    )
+    agent = _build_agent()
 
     print("\n🎬 Content Agent — Interactive Mode")
     print("=" * 50)
     print("Commands: 'quit' to exit, 'help' for usage\n")
+
+    messages = []
 
     while True:
         try:
@@ -166,5 +122,7 @@ def run_interactive():
             )
             continue
 
-        result = executor.invoke({"input": user_input})
-        print(f"\nAgent: {result['output']}\n")
+        messages.append({"role": "user", "content": user_input})
+        result = agent.invoke({"messages": messages})
+        messages = result["messages"]
+        print(f"\nAgent: {messages[-1].content}\n")

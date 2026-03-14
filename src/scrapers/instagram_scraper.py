@@ -3,9 +3,11 @@
 import itertools
 import logging
 import re
+from typing import Optional
 
 import instaloader
 
+from src.config import config
 from src.rag.post_importer import (
     _generate_post_id,
     _get_posts_collection,
@@ -66,9 +68,10 @@ def _instaloader_post_to_dict(post) -> dict:
         Dict with keys: caption, hashtags, likes, comments, shares, views,
         posted_at, content_type.
     """
-    hashtags = sorted(f"#{h}" for h in (post.hashtags or set()))
+    caption: str = post.caption or ""
+    hashtags = sorted(re.findall(r"#\w+", caption))
     return {
-        "caption": post.caption or "",
+        "caption": caption,
         "hashtags": hashtags,
         "likes": post.likes,
         "comments": post.comments,
@@ -100,8 +103,16 @@ def fetch_instagram_posts(username: str, post_count: int = 10) -> list[dict]:
         download_comments=False,
         save_metadata=False,
         compress_json=False,
-        quiet=True,
+        quiet=not config.INSTAGRAM_USERNAME,
     )
+
+    if config.INSTAGRAM_USERNAME:
+        try:
+            L.load_session_from_file(config.INSTAGRAM_USERNAME)
+            logger.info("Loaded saved session for %s", config.INSTAGRAM_USERNAME)
+        except FileNotFoundError:
+            L.interactive_login(config.INSTAGRAM_USERNAME)
+            L.save_session_to_file()
 
     try:
         profile = instaloader.Profile.from_username(L.context, username)

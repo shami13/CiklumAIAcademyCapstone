@@ -1,38 +1,61 @@
 graph TB
     subgraph Input
         V[Video File]
+        IG[Instagram Profile URL]
+    end
+
+    subgraph Scraping["Instagram Scraper"]
+        IS[Instaloader<br/>Fetch Posts + Login/MFA]
     end
 
     subgraph Agent["LangChain ReAct Agent"]
         VA[Video Analyzer<br/>GPT-4o Vision]
-        RAG[RAG Knowledge Base<br/>ChromaDB + Embeddings]
         HR[Hashtag Researcher<br/>Trending Topics]
         DG[Description Generator<br/>Combine Analysis + RAG]
         SR[Self-Reflection<br/>Evaluate & Improve]
         EV[Evaluator<br/>Quality Scoring]
     end
 
+    subgraph RAGStore["ChromaDB RAG"]
+        KB[Knowledge Base<br/>Best Practices]
+        PP[Personal Posts<br/>Scraped History]
+    end
+
     subgraph Output
-        TP[TikTok Publisher<br/>Content Posting API]
+        TK[TikTok Description]
+        RL[Instagram Reels Description]
+        YT[YouTube Shorts Description]
         RPT[Quality Report]
     end
 
+    IG --> IS
+    IS --> PP
+
     V --> VA
-    V --> HR
+    VA --> HR
     VA --> DG
-    RAG --> DG
+    KB --> DG
+    PP --> DG
     HR --> DG
     DG --> SR
     SR -->|Score < 7/10| DG
-    SR -->|Score >= 7/10| TP
+    SR -->|Score >= 7/10| TK
+    SR -->|Score >= 7/10| RL
+    SR -->|Score >= 7/10| YT
     SR --> EV
     EV --> RPT
 
     style Agent fill:#f5f5ff,stroke:#534AB7
+    style RAGStore fill:#FFF8E1,stroke:#F9A825
+    style Scraping fill:#E8F5E9,stroke:#2E7D32
     style VA fill:#E1F5EE,stroke:#0F6E56
-    style RAG fill:#E1F5EE,stroke:#0F6E56
     style HR fill:#E1F5EE,stroke:#0F6E56
     style DG fill:#FAECE7,stroke:#993C1D
     style SR fill:#FBEAF0,stroke:#993556
     style EV fill:#FBEAF0,stroke:#993556
-    style TP fill:#E6F1FB,stroke:#185FA5
+    style KB fill:#FFF8E1,stroke:#F9A825
+    style PP fill:#FFF8E1,stroke:#F9A825
+    style IS fill:#E8F5E9,stroke:#2E7D32
+    style TK fill:#E6F1FB,stroke:#185FA5
+    style RL fill:#E6F1FB,stroke:#185FA5
+    style YT fill:#E6F1FB,stroke:#185FA5

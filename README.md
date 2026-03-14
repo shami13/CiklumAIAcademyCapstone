@@ -14,8 +14,7 @@ See [architecture.mmd](architecture.mmd) for the full system diagram.
 |---|---|
 | **Video Analyzer** | Extracts key frames from video, analyzes content via GPT-4o Vision |
 | **RAG Knowledge Base** | ChromaDB vector store with best practices for short-form video content |
-| **Post Importer** | Imports personal post history (TikTok/Instagram) from JSON/CSV for RAG personalization |
-| **Instagram Scraper** | Fetches posts from public Instagram profiles via `instaloader` |
+| **Instagram Scraper** | Fetches posts from Instagram profiles via `instaloader` (supports login + MFA) and imports into RAG |
 | **Hashtag Researcher** | Suggests relevant trending hashtags per platform (TikTok, Reels, Shorts) |
 | **Description Generator** | Creates optimized captions for all 3 platforms in one pass |
 | **Evaluator** | Scores output quality with 8 criteria including platform adaptation |
@@ -65,23 +64,22 @@ python main.py --video path/to/video.mp4
 python main.py --interactive
 ```
 
-### 5. Import personal post data (optional)
+### 5. Import posts from Instagram (optional)
 
-Import your own post history so the agent learns your style and what performs best.
+Scrape posts from a public Instagram profile so the agent learns the creator's style.
+
+To avoid Instagram rate limits, add your username to `.env`:
+
+```env
+INSTAGRAM_USERNAME=your_username
+```
+
+On first run, instaloader will interactively prompt for your password and MFA code in the terminal. The session is saved locally so subsequent runs won't require re-authentication.
 
 ```bash
-# Import from JSON (see examples/sample_posts.json for format)
-python main.py --import-posts my_tiktok_posts.json
-
-# Import from CSV (see examples/sample_posts.csv for format)
-python main.py --import-posts my_instagram_posts.csv
-
 # Scrape from a public Instagram profile
 python main.py --scrape-instagram natgeo --post-count 20
 python main.py --scrape-instagram https://www.instagram.com/natgeo/
-
-# View import statistics
-python main.py --show-stats
 ```
 
 ## Configuration
@@ -92,6 +90,7 @@ python main.py --show-stats
 | `CHROMA_PERSIST_DIR` | ChromaDB storage path (default: `./chroma_db`) |
 | `MAX_REFLECTION_RETRIES` | Max self-reflection loops (default: 3) |
 | `MIN_QUALITY_SCORE` | Minimum score to pass evaluation (default: 7) |
+| `INSTAGRAM_USERNAME` | Instagram username for authenticated scraping (optional, password prompted interactively) |
 
 ## Project Structure
 
@@ -100,9 +99,6 @@ tiktok-content-agent/
 ├── main.py                          # CLI entry point
 ├── architecture.mmd                 # Mermaid architecture diagram
 ├── requirements.txt
-├── examples/
-│   ├── sample_posts.json            # Example JSON format for post import
-│   └── sample_posts.csv             # Example CSV format for post import
 ├── src/
 │   ├── agent.py                     # LangChain ReAct agent orchestrator
 │   ├── config.py                    # Configuration management
@@ -112,7 +108,7 @@ tiktok-content-agent/
 │   │   └── hashtag_researcher.py    # Per-platform hashtag suggestions
 │   ├── rag/
 │   │   ├── knowledge_base.py        # ChromaDB setup + best practices seeding
-│   │   └── post_importer.py         # Personal post import (JSON/CSV) + RAG
+│   │   └── post_importer.py         # Personal posts ChromaDB collection + RAG queries
 │   ├── scrapers/
 │   │   └── instagram_scraper.py     # Instagram public profile scraping
 │   └── evaluation/
@@ -134,35 +130,6 @@ tiktok-content-agent/
    - **YouTube Shorts** — SEO-friendly title (100 chars) + keyword-rich description
 6. **Self-Reflection**: Agent evaluates its own output against 8 quality criteria, rewrites if score < 7/10
 7. **Output**: Presents all 3 platform descriptions ready to copy-paste and publish manually
-
-## Post Import Format
-
-### JSON
-
-```json
-{
-  "platform": "tiktok",
-  "posts": [
-    {
-      "caption": "Your post caption here",
-      "hashtags": ["#tag1", "#tag2"],
-      "likes": 1500,
-      "comments": 45,
-      "shares": 12,
-      "views": 25000,
-      "posted_at": "2026-02-15T18:30:00",
-      "content_type": "tutorial"
-    }
-  ]
-}
-```
-
-### CSV
-
-```
-caption,hashtags,likes,comments,shares,views,posted_at,content_type,platform
-"Your post caption",#tag1;#tag2,1500,45,12,25000,2026-02-15T18:30:00,tutorial,tiktok
-```
 
 ## Author
 
